@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b0e1a">
+<title>WoW Classic 1.12.1 — Mobile Fan Tribute</title>
+<style>
+:root{
+  --gold:#c9a227; --gold-hi:#f3d97b; --parch:#e8d9b0; --panel:#141021ee;
+  --hp:#c0392b; --mp:#2471a3; --xp:#7d3c98; --green:#2ecc71;
+  --touch:0;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0b0e1a;
+  font-family:Georgia,'Times New Roman',serif;color:var(--parch);
+  touch-action:none; overscroll-behavior:none;}
+#scene{position:fixed;inset:0;}
+#scene canvas{display:block;}
+#vignette{position:fixed;inset:0;pointer-events:none;z-index:2;
+  background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55) 100%);}
+/* ============ LOGIN ============ */
+#login{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 50% 30%,#2b3a67 0%,#141a33 45%,#070912 100%);padding:12px;}
+#login.hidden{display:none;}
+#login-card{width:min(860px,96vw);max-height:94vh;overflow:auto;background:linear-gradient(#1c1830f2,#100d1ef5);
+  border:2px solid var(--gold);border-radius:12px;box-shadow:0 0 60px #000,0 0 24px #c9a22755;padding:18px 20px;}
+#login-card h1{margin:0;text-align:center;font-size:clamp(22px,4.5vw,40px);letter-spacing:2px;color:var(--gold-hi);
+  text-shadow:0 2px 0 #000,0 0 18px #c9a22788;}
+#login-card h2{text-align:center;margin:2px 0 10px;font-size:clamp(11px,2vw,15px);color:#9fb4dd;font-weight:normal;letter-spacing:3px;}
+#disclaimer{text-align:center;font-size:11px;color:#8a8468;margin-bottom:10px;}
+.login-cols{display:flex;gap:16px;flex-wrap:wrap;}
+.login-col{flex:1 1 240px;min-width:230px;}
+.login-col h3{margin:8px 0 6px;color:var(--gold);font-size:14px;letter-spacing:1px;border-bottom:1px solid #c9a22755;padding-bottom:4px;}
+#realm-list{border:1px solid #c9a22766;border-radius:6px;overflow:hidden;}
+.realm{padding:8px 10px;font-size:13px;background:#0d0b18;display:flex;justify-content:space-between;cursor:pointer;}
+.realm.sel{background:#2a3f6e;color:#fff;}
+.realm .pop{color:#7fdb7f;font-size:11px;}
+.opt-row{display:flex;flex-wrap:wrap;gap:6px;}
+.opt{flex:1 1 auto;border:1px solid #6b6390;background:#1a1530;color:var(--parch);border-radius:6px;
+  padding:8px 6px;font-size:13px;cursor:pointer;text-align:center;font-family:inherit;}
+.opt small{display:block;font-size:10px;color:#9a93b8;}
+.opt.sel{border-color:var(--gold);background:#3a2f14;color:var(--gold-hi);box-shadow:0 0 8px #c9a22766;}
+#char-name{width:100%;padding:10px;font-size:16px;border-radius:6px;border:1px solid var(--gold);
+  background:#0d0b18;color:#fff;font-family:inherit;}
+#enter-btn{display:block;width:100%;margin-top:14px;padding:14px;font-size:18px;letter-spacing:1px;cursor:pointer;
+  color:#1a1206;background:linear-gradient(#ffe9a3,#c9a227 60%,#8a6d15);border:2px solid #fff2b0;border-radius:8px;font-family:inherit;font-weight:bold;}
+#enter-btn:active{transform:scale(.98);}
+#dice-row{display:flex;gap:6px;margin-top:6px;}
+#dice-btn{flex:1;padding:8px;cursor:pointer;background:#232046;color:var(--parch);border:1px solid #6b6390;border-radius:6px;font-family:inherit;}
+#controls-help{font-size:12px;color:#b9b294;line-height:1.7;background:#0d0b18;border:1px solid #444;padding:8px;border-radius:6px;}
+#controls-help b{color:var(--gold-hi);}
+/* ============ HUD ============ */
+#hud{position:fixed;inset:0;z-index:10;pointer-events:none;display:none;}
+#hud.on{display:block;}
+.panel{background:var(--panel);border:1px solid var(--gold);border-radius:8px;box-shadow:0 2px 10px #000c;}
+/* player frame */
+#player-frame{position:absolute;top:10px;left:10px;display:flex;gap:8px;align-items:center;padding:8px 10px;pointer-events:auto;}
+#portrait{width:64px;height:64px;border-radius:50%;border:2px solid var(--gold);background:#222;}
+#pf-bars{width:min(230px,38vw);}
+#pf-name{font-size:14px;color:var(--gold-hi);text-shadow:0 1px 2px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bar{position:relative;height:16px;background:#000;border:1px solid #555;border-radius:3px;margin-top:3px;overflow:hidden;}
+.bar .fill{position:absolute;inset:0;width:100%;transition:width .15s;}
+.bar span{position:absolute;inset:0;text-align:center;font-size:11px;line-height:15px;color:#fff;text-shadow:0 1px 2px #000;}
+#hp-fill{background:linear-gradient(#e74c3c,#7b241c);}
+#mp-fill{background:linear-gradient(#3498db,#1a4d7a);}
+#pf-lvl{position:absolute;left:-6px;top:-6px;width:26px;height:26px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe9a3,#8a6d15);
+  color:#241a05;font-weight:bold;font-size:14px;display:flex;align-items:center;justify-content:center;border:1px solid #fff2b0;}
+/* target frame */
+#target-frame{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:none;align-items:center;gap:8px;padding:6px 12px;pointer-events:auto;min-width:220px;}
+#target-frame.on{display:flex;}
+#target-frame.elite{border-color:#ff5b4d;box-shadow:0 0 14px #ff000088;}
+#t-name{font-size:13px;color:#ffd;} #t-lvl{font-size:11px;color:#aaa;}
+#t-hp{width:min(200px,30vw);}
+/* minimap */
+#minimap-wrap{position:absolute;top:10px;right:10px;text-align:center;pointer-events:auto;padding:6px;}
+#minimap{display:block;width:132px;height:132px;border-radius:50%;border:2px solid var(--gold);background:#06130a;}
+#zone-label{font-size:11px;color:var(--gold-hi);margin-top:2px;}
+#clock,#online{font-size:10px;color:#9a93b8;}
+/* quest tracker */
+#quest-tracker{position:absolute;top:190px;right:10px;width:200px;padding:8px 10px;font-size:12px;pointer-events:auto;}
+#quest-tracker h4{margin:0 0 4px;color:var(--gold);font-size:12px;}
+#quest-tracker .q{margin-bottom:6px;line-height:1.45;}
+#quest-tracker .done{color:#7fdb7f;}
+/* chat */
+#chat{position:absolute;left:10px;bottom:86px;width:min(380px,60vw);display:flex;flex-direction:column;pointer-events:auto;}
+#chat-log{height:150px;overflow-y:auto;font-size:12px;line-height:1.5;padding:6px 8px;background:#000000b8;border:1px solid #4a4468;border-radius:6px 6px 0 0;}
+#chat-log .say{color:#fff;} #chat-log .yell{color:#ff6b5e;} #chat-log .general{color:#f5b7e8;}
+#chat-log .trade{color:#7fe3a0;} #chat-log .guild{color:#7fd4ff;} #chat-log .combat{color:#ffd27f;}
+#chat-log .sys{color:var(--gold-hi);} #chat-log .loot{color:#c39bd3;}
+#chat-tabs{display:flex;gap:2px;margin-bottom:2px;}
+#chat-tabs button{flex:1;font-size:10px;padding:3px;background:#1a1530;color:#9a93b8;border:1px solid #4a4468;border-radius:4px;font-family:inherit;cursor:pointer;}
+#chat-tabs button.sel{color:var(--gold-hi);border-color:var(--gold);}
+#chat-row{display:flex;}
+#chat-input{flex:1;padding:7px;font-size:13px;background:#0d0b18;color:#fff;border:1px solid #4a4468;border-radius:0 0 0 6px;font-family:inherit;min-width:0;}
+#chat-send{padding:7px 10px;background:#2a3f6e;color:#fff;border:1px solid #4a4468;border-radius:0 0 6px 0;cursor:pointer;font-family:inherit;}
+/* action bar */
+#bottom-center{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(8px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:auto;width:max-content;max-width:98vw;}
+#xp-bar{width:min(520px,86vw);height:10px;background:#000;border:1px solid #6b6390;border-radius:5px;position:relative;overflow:hidden;}
+#xp-fill{position:absolute;inset:0;background:linear-gradient(90deg,#8e44ad,#af7ac5);width:0%;}
+#xp-text{position:absolute;inset:0;text-align:center;font-size:8px;color:#fff;line-height:9px;}
+#actionbar{display:flex;gap:4px;}
+.slot{width:46px;height:46px;background:linear-gradient(#2b2740,#151222);border:1px solid #8a7d4d;border-radius:6px;
+  position:relative;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;user-select:none;}
+.slot .ic{font-size:19px;font-weight:bold;line-height:1;}
+.slot .key{position:absolute;top:0;left:3px;font-size:9px;color:#8a8468;}
+.slot .cdov{position:absolute;inset:0;background:#000a;display:none;align-items:center;justify-content:center;font-size:14px;color:#fff;border-radius:6px;}
+.slot small{font-size:7px;color:#9a93b8;line-height:1;}
+.slot.off{opacity:.45;}
+#micromenu{display:flex;gap:4px;}
+#micromenu button{font-size:10px;padding:4px 8px;background:#1a1530;color:var(--parch);border:1px solid #6b6390;border-radius:5px;cursor:pointer;font-family:inherit;}
+#micromenu button:active{background:#3a2f14;}
+/* toast + announcements */
+#server-msg{position:absolute;top:12%;width:100%;text-align:center;font-size:clamp(14px,3vw,24px);color:#ffe27a;text-shadow:0 2px 4px #000;pointer-events:none;}
+#toast-layer{position:absolute;bottom:200px;width:100%;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none;}
+.toast{background:#000c;border:1px solid var(--gold);border-radius:6px;padding:5px 12px;font-size:13px;color:var(--gold-hi);}
+#dmg-layer{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+.dmg{position:absolute;font-weight:bold;font-size:16px;color:#ffd94d;text-shadow:0 2px 2px #000;transform:translate(-50%,-50%);}
+.dmg.crit{font-size:23px;color:#ff7b2e;} .dmg.heal{color:#5dff8a;} .dmg.hurt{color:#ff5b5b;} .dmg.miss{color:#bbb;font-size:12px;}
+/* interact */
+#interact-prompt{position:absolute;left:50%;bottom:170px;transform:translateX(-50%);display:none;pointer-events:auto;}
+#interact-prompt.on{display:block;}
+#interact-prompt button{padding:10px 18px;font-size:15px;background:linear-gradient(#ffe9a3,#8a6d15);border:2px solid #fff2b0;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:bold;}
+/* side panels */
+.sidepanel{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(420px,92vw);max-height:80vh;overflow:auto;
+  padding:14px 16px;display:none;pointer-events:auto;z-index:20;}
+.sidepanel.on{display:block;}
+.sidepanel h3{margin:0 0 8px;color:var(--gold);}
+.sidepanel .close{float:right;cursor:pointer;background:#5b1111;color:#fff;border:1px solid #a33;border-radius:4px;padding:2px 8px;}
+#bag-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;}
+.bag-slot{aspect-ratio:1;background:#0d0b18;border:1px solid #6b6390;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+#bigmap{width:min(560px,94vw);height:min(420px,70vh);}
+/* death */
+#death-overlay{position:absolute;inset:0;background:#300000cc;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:30;pointer-events:auto;}
+#death-overlay.on{display:flex;}
+#death-overlay h2{color:#ff6b5e;font-size:28px;margin:0 0 6px;}
+#release-btn{padding:12px 26px;font-size:16px;cursor:pointer;background:#222;color:#fff;border:1px solid var(--gold);border-radius:8px;font-family:inherit;}
+/* dialog */
+#dialog{position:absolute;left:50%;bottom:150px;transform:translateX(-50%);width:min(440px,92vw);padding:12px 14px;display:none;pointer-events:auto;z-index:20;}
+#dialog.on{display:block;} #dialog h3{margin:0 0 4px;color:var(--gold-hi);}
+#dialog p{font-size:13px;line-height:1.5;} #dialog button{margin:4px 6px 0 0;padding:8px 12px;cursor:pointer;font-family:inherit;
+  background:#2a3f6e;color:#fff;border:1px solid #6b6390;border-radius:6px;}
+#lvl-flash{position:absolute;inset:0;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,transparent 40%,#ffd700aa 100%);transition:opacity .3s;}
+#fps{position:absolute;bottom:8px;right:8px;font-size:10px;color:#8a8468;pointer-events:none;}
+#err{position:fixed;inset:0;z-index:99;display:none;align-items:center;justify-content:center;background:#200;padding:20px;text-align:center;}
+/* ============ TOUCH UI ============ */
+#touch-ui{display:none;}
+body.touch #touch-ui{display:block;}
+#joy-zone{position:absolute;left:14px;bottom:calc(170px + env(safe-area-inset-bottom));width:132px;height:132px;border-radius:50%;
+  border:2px solid #ffffff55;background:#ffffff11;pointer-events:auto;}
+#joy-knob{position:absolute;left:50%;top:50%;width:56px;height:56px;border-radius:50%;transform:translate(-50%,-50%);
+  background:radial-gradient(circle at 35% 30%,#ffe9a3,#8a6d15);border:2px solid #fff2b0;}
+#touch-btns{position:absolute;right:12px;bottom:calc(150px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(2,64px);gap:10px;pointer-events:auto;}
+.tbtn{width:64px;height:64px;border-radius:50%;border:2px solid var(--gold);background:#141021cc;color:var(--gold-hi);
+  font-size:12px;font-weight:bold;font-family:inherit;display:flex;align-items:center;justify-content:center;}
+.tbtn.big{width:76px;height:76px;font-size:14px;}
+.tbtn:active{background:#3a2f14;}
+body.touch #actionbar .slot{width:54px;height:54px;}
+body.touch #chat{bottom:300px;width:min(330px,72vw);}
+body.touch #chat-log{height:100px;}
+body.touch #touch-hint{display:block;}
+#touch-hint{display:none;position:absolute;bottom:calc(8px + env(safe-area-inset-bottom));left:8px;font-size:10px;color:#8a8468;}
+@media (max-width:700px){
+  #quest-tracker{display:none;}
+  #quest-tracker.mini{display:block;width:150px;font-size:11px;top:160px;}
+  #minimap{width:96px;height:96px;}
+  #pf-bars{width:34vw;}
+  .slot{width:40px;height:40px;} .slot .ic{font-size:16px;}
+  #chat{width:62vw;}
+}
+@media (orientation:portrait) and (max-width:700px){
+  #bottom-center{bottom:calc(150px + env(safe-area-inset-bottom));}
+  #chat{bottom:330px;}
+}
+</style>
+</head>
+<body>
+<div id="scene"></div>
+<div id="vignette"></div>
+
+<!-- LOGIN -->
+<div id="login">
+  <div id="login-card">
+    <h1>WORLD OF WARCRAFT</h1>
+    <h2>CLASSIC &middot; PATCH 1.12.1 &middot; MOBILE TRIBUTE</h2>
+    <div id="disclaimer">Unofficial fan-made tribute. Not affiliated with or endorsed by Blizzard Entertainment.<br>
+    A tiny hand-built 3D homage with bots to keep the world lively. Best on phone/tablet or desktop browser.</div>
+    <div class="login-cols">
+      <div class="login-col">
+        <h3>REALM</h3>
+        <div id="realm-list">
+          <div class="realm sel"><span>Mankrik's Wife</span><span class="pop">PvP &middot; High</span></div>
+          <div class="realm"><span>Hogger's Revenge</span><span class="pop">PvE &middot; Full</span></div>
+        </div>
+        <h3>CHARACTER NAME</h3>
+        <input id="char-name" maxlength="12" value="ThrallsCousin">
+        <div id="dice-row"><button id="dice-btn">Randomize name</button></div>
+      </div>
+      <div class="login-col">
+        <h3>RACE</h3>
+        <div class="opt-row" id="race-row">
+          <button class="opt sel" data-v="Human">Human<small>Diplomacy</small></button>
+          <button class="opt" data-v="Elf">Night Elf<small>Shadowmeld</small></button>
+          <button class="opt" data-v="Dwarf">Dwarf<small>Stoneform</small></button>
+          <button class="opt" data-v="Orc">Orc<small>Blood Fury</small></button>
+        </div>
+        <h3>CLASS</h3>
+        <div class="opt-row" id="class-row">
+          <button class="opt sel" data-v="Warrior">Warrior<small>Charge &amp; Strike</small></button>
+          <button class="opt" data-v="Mage">Mage<small>Fireball &amp; Frost</small></button>
+          <button class="opt" data-v="Druid">Druid<small>Heal &amp; Moonfire</small></button>
+        </div>
+        <h3>WORLD LIVENESS (BOTS)</h3>
+        <div class="opt-row" id="dens-row">
+          <button class="opt" data-v="calm">Calm<small>~20 bots</small></button>
+          <button class="opt sel" data-v="lively">Lively<small>~45 bots</small></button>
+          <button class="opt" data-v="chaos">Chaos<small>~80 bots</small></button>
+        </div>
+      </div>
+      <div class="login-col">
+        <h3>HOW TO PLAY</h3>
+        <div id="controls-help">
+          <b>Desktop:</b> WASD move &middot; drag mouse = camera &middot; wheel = zoom &middot; click = target &middot; 1-8 spells &middot; E talk &middot; C char &middot; Q quests &middot; M map &middot; ESC menu<br>
+          <b>Mobile:</b> left stick = move &middot; drag right side = camera &middot; big buttons = attack/jump/target/talk &middot; tap enemy = target<br>
+          <b>Goal:</b> take quests in Meadowshire, slay Mudfins, Boars &amp; Wolves. Beware <b>HOGG</b>, elite gnoll lord of the forest (skull level). Group with bots — they grind, duel, dance and spam trade chat, just like 2006.
+        </div>
+      </div>
+    </div>
+    <button id="enter-btn">ENTER WORLD</button>
+  </div>
+</div>
+
+<!-- HUD -->
+<div id="hud">
+  <div id="player-frame" class="panel">
+    <div id="pf-lvl">1</div>
+    <canvas id="portrait" width="64" height="64"></canvas>
+    <div id="pf-bars">
+      <div id="pf-name">ThrallsCousin</div>
+      <div class="bar"><div class="fill" id="hp-fill"></div><span id="hp-text"></span></div>
+      <div class="bar"><div class="fill" id="mp-fill"></div><span id="mp-text"></span></div>
+    </div>
+  </div>
+  <div id="target-frame" class="panel">
+    <div><div id="t-name">?</div><div id="t-lvl"></div></div>
+    <div class="bar" id="t-hp"><div class="fill" id="t-hp-fill" style="background:linear-gradient(#e74c3c,#7b241c)"></div><span id="t-hp-text"></span></div>
+  </div>
+  <div id="minimap-wrap" class="panel">
+    <canvas id="minimap" width="148" height="148"></canvas>
+    <div id="zone-label">Elwynn Meadow</div>
+    <div id="clock">--:--</div><div id="online"></div>
+  </div>
+  <div id="quest-tracker" class="panel"><h4>QUESTS</h4><div id="qt-list"></div></div>
+  <div id="chat">
+    <div id="chat-tabs">
+      <button data-t="all" class="sel">All</button><button data-t="general">General</button>
+      <button data-t="combat">Combat</button><button data-t="loot">Loot</button>
+    </div>
+    <div id="chat-log"></div>
+    <div id="chat-row"><input id="chat-input" maxlength="120" placeholder="Say something... (Enter)"><button id="chat-send">Say</button></div>
+  </div>
+  <div id="bottom-center">
+    <div id="xp-bar"><div id="xp-fill"></div><div id="xp-text"></div></div>
+    <div id="actionbar"></div>
+    <div id="micromenu">
+      <button data-m="char">Character (C)</button><button data-m="quest">Quests (Q)</button>
+      <button data-m="map">Map (M)</button><button data-m="help">Help (H)</button><button data-m="menu">Menu (ESC)</button>
+    </div>
+  </div>
+  <div id="server-msg"></div>
+  <div id="toast-layer"></div>
+  <div id="dmg-layer"></div>
+  <div id="interact-prompt"><button id="interact-btn">Talk (E)</button></div>
+
+  <div id="charpanel" class="sidepanel panel"><button class="close" data-c="charpanel">X</button><h3>Character</h3><div id="char-stats"></div></div>
+  <div id="questpanel" class="sidepanel panel"><button class="close" data-c="questpanel">X</button><h3>Quest Log (Q)</h3><div id="quest-log"></div></div>
+  <div id="mappanel" class="sidepanel panel"><button class="close" data-c="mappanel">X</button><h3>Elwynn Meadow — 1.12.1</h3><canvas id="bigmap" width="520" height="380"></canvas>
+    <div style="font-size:11px;color:#9a93b8">Gold ! = quest giver &middot; Yellow = adventurers &middot; Red = beasts &middot; Skull = HOGG</div></div>
+  <div id="helppanel" class="sidepanel panel"><button class="close" data-c="helppanel">X</button><h3>Help</h3>
+    <div style="font-size:13px;line-height:1.7">Desktop: WASD + mouse drag camera, click enemy to target, auto-attack in range, keys 1-8 cast.<br>
+    Mobile: left stick moves, drag right half rotates camera, tap enemy targets, buttons attack/jump/target/talk.<br>
+    Talk to <b>Marshal McBride</b> (gold !) for quests. Kill Mudfins at the lake, Boars at the farm, Wolves in the west woods. Turn in for XP and gold. Elite HOGG roams the north road — bring bots.<br>
+    Hearthstone (slot 8) returns to Meadowshire. Bandage (7) heals. If you die, release spirit at the graveyard.</div></div>
+  <div id="menupanel" class="sidepanel panel"><button class="close" data-c="menupanel">X</button><h3>Game Menu</h3>
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+      <label>Quality: <select id="set-quality"><option value="auto">Auto</option><option value="high">High</option><option value="low">Low</option></select></label>
+      <label><input type="checkbox" id="set-touch"> Force touch controls</label>
+      <label><input type="checkbox" id="set-sound" checked> Sound</label>
+      <label><input type="checkbox" id="set-chatter" checked> Bot chat</label>
+      <button id="btn-logout" style="padding:8px">Log out (change character)</button>
+    </div></div>
+  <div id="bagpanel" class="sidepanel panel"><button class="close" data-c="bagpanel">X</button><h3>Backpack</h3>
+    <div style="font-size:13px" id="gold-line"></div><div id="bag-grid"></div></div>
+
+  <div id="dialog" class="panel"><h3 id="dlg-name"></h3><p id="dlg-text"></p><div id="dlg-btns"></div></div>
+  <div id="death-overlay"><h2>YOU HAVE DIED</h2><div style="margin-bottom:12px;font-size:13px" id="death-by"></div><button id="release-btn">Release Spirit</button></div>
+  <div id="lvl-flash"></div>
+  <div id="fps"></div><div id="touch-hint">Left stick moves &middot; drag right side for camera</div>
+
+  <div id="touch-ui">
+    <div id="joy-zone"><div id="joy-knob"></div></div>
+    <div id="touch-btns">
+      <button class="tbtn big" id="btn-atk">ATK</button>
+      <button class="tbtn" id="btn-jump">JUMP</button>
+      <button class="tbtn" id="btn-tgt">TGT</button>
+      <button class="tbtn" id="btn-int">TALK</button>
+    </div>
+  </div>
+</div>
+
+<div id="err"><div><h2>Could not start 3D</h2><p id="err-msg"></p></div></div>
+
+<script type="importmap">{"imports":{"three":"./three.module.js"}}</script>
+<script type="module" src="./game.js"></script>
+</body>
+</html>
